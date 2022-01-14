@@ -19,7 +19,7 @@ def main():
   i_frame = 0
   is_hit = False
 
-  def spawn():
+  def spawn_enemies():
     enemy_spawn = random.randint(0, 100)
     if enemy_spawn > 1 and enemy_spawn < 5:
       enemy_spawnx = 0
@@ -111,8 +111,7 @@ def main():
 
 
   player = Entity("black", 100, 100, 20, 20, 5, 10 )
-  while game_active:
-
+  while True:
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         pygame.quit()
@@ -121,71 +120,90 @@ def main():
         x,y = pygame.mouse.get_pos()
         b = Bullet("black", player.rect.centerx, player.rect.centery, 10, 10, 10, 1, x, y)
         bullets.append(b)
-    if game_active:
-      screen.fill("#c0e8ec")
-      player.draw(screen)
-      text_surface = font.render(f"Score: {score}", False, (64,64,64)).convert()
-      text_rectangle = text_surface.get_rect(center = (400, 50))
-      screen.blit(text_surface, text_rectangle)
-      pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
-
-
-    if is_hit == True:
-      i_frame -= 1
-      if i_frame <= 0:
-        is_hit = False
-
-
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP] or keys[pygame.K_w]:
-      player.rect.y -= player.speed
-    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-      player.rect.y += player.speed
-    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-      player.rect.x -= player.speed
-    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-      player.rect.x += player.speed
-
-    spawn()
-    #Check for bullet collision with enemies
-    for b in reversed(range(len(bullets))):
-      for e in reversed(range(len(enemies))):
-        if bullets[b].collided(enemies[e].rect):
-          del bullets[b]
-          enemies[e].hp -= 1
-          if enemies[e].hp <= 0:
+      if event.type == pygame.KEYDOWN and game_active == False:
+        if event.key == pygame.K_SPACE:
+          game_active = True
+          player.hp = 10
+          score = 0
+          for e in reversed(range(len(enemies))):
             del enemies[e]
-          score += 10
-          break
+        for b in reversed(range(len(bullets))):
+            del bullets[b]
+    if game_active:
 
-    for e in reversed(range(len(enemies))):
-      if player.collided(enemies[e].rect):
-        if i_frame <= 0 and is_hit == False:
-          del enemies[e]
-          player.hp -= 1
-          is_hit = True
-          i_frame = 15
-          print(f"Player HP remaining: {player.hp}")
-          if player.hp <= 0:
-            game_active = False
+        screen.fill("#c0e8ec")
+        player.draw(screen)
+        text_surface = font.render(f"Score: {score}", False, (64,64,64)).convert()
+        text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
+        screen.blit(text_surface, text_rectangle)
+        pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
 
 
-    for b in bullets:
-      b.move()
-      if b.x < 0 or b.x > 1024:
-        bullets.remove(b)
-      if b.y < 0 or b.y > 768:
-        bullets.remove(b)
+        if is_hit == True:
+          i_frame -= 1
+          if i_frame <= 0:
+            is_hit = False
 
-    for e in enemies:
-      e.move()
 
-    for b in bullets:
-      b.draw(screen)
-    for e in enemies:
-      e.draw(screen)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+          player.rect.y -= player.speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+          player.rect.y += player.speed
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+          player.rect.x -= player.speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+          player.rect.x += player.speed
 
-      
+        spawn_enemies()
+        for b in reversed(range(len(bullets))):
+          for e in reversed(range(len(enemies))):
+            if bullets[b].collided(enemies[e].rect):
+              del bullets[b]
+              enemies[e].hp -= 1
+              if enemies[e].hp <= 0:
+                del enemies[e]
+              score += 10
+              break
+
+        for e in reversed(range(len(enemies))):
+          if player.collided(enemies[e].rect):
+            if i_frame <= 0 and is_hit == False:
+              del enemies[e]
+              player.hp -= 1
+              is_hit = True
+              i_frame = 15
+              print(f"Player HP remaining: {player.hp}")
+              if player.hp <= 0:
+                game_active = False
+
+        for b in bullets:
+          b.move()
+          if b.x <= -50 or b.x >= 1074:
+            bullets.remove(b)
+          if b.y <= -50 or b.y > 818:
+            bullets.remove(b)
+
+        for e in enemies:
+          e.move()
+
+        for b in bullets:
+          b.draw(screen)
+        for e in enemies:
+          e.draw(screen)
+
+    else:
+      screen.fill("#c0e8ec")
+      text_surface = font.render(f"Score: {score}", False, (64,64,64)).convert()
+      text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
+      screen.blit(text_surface, text_rectangle)
+      game_over_surface = font.render("Game over!", False, "red")
+      game_over_rectangle = game_over_surface.get_rect(center = (screen.get_width() /2 , screen.get_height() /2))
+      restart_prompt_surface = font.render("Press space to restart", False, "black")
+      restart_prompt_rectangle = restart_prompt_surface.get_rect(center = (screen.get_width() / 2, screen.get_height() - 100))
+      screen.blit(game_over_surface, game_over_rectangle)
+      screen.blit(restart_prompt_surface, restart_prompt_rectangle)
+
     pygame.display.update()
     clock.tick(60)
   
