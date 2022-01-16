@@ -1,4 +1,6 @@
 __pycache__
 build
 dist
-game.spec
+game.dist
+game.build
+game.dist.zip
