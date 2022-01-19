@@ -3,9 +3,6 @@ import math
 import random
 from sys import exit
 
-
-
-
 def main():
   pygame.init()
 
@@ -20,6 +17,9 @@ def main():
       self.fire_rate = 1
       self.shot_size = 1
       self.damage = 1
+      self.exp = 0
+      self.level = 1
+      self.skill_points = 0
       self.skills = {
         "spray" : False
       }
@@ -47,13 +47,14 @@ def main():
 
 
   class Enemy(Entity):
-    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire):
+    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire, exp):
       super().__init__(color, x, y, width, height, speed, hp)
       self.rect = pygame.Rect(x, y, width, height)
       self.bullet_speed = bullet_speed
       self.shot_damage = shot_damage
       self.collide_damage = collide_damage
       self.can_fire = can_fire
+      self.exp = exp
       self.dx = 0
       self.dy = 0
     def move(self):
@@ -84,11 +85,12 @@ def main():
   boss_spawned = False
   shot_cd = 0
   player = Entity("black", 100, 100, 20, 20, 5, 10 )
+  difficulty = 1
 
   #Enemy spawning begins here
   def spawn_enemies():
       enemy_spawn = random.randint(0, 100)
-      if enemy_spawn > 1 and enemy_spawn < 3:
+      if enemy_spawn > 1 and enemy_spawn < (3 + difficulty):
         enemy_spawnx = 0
         enemy_spawny = 0
         spawn_wall = random.randint(1, 4)
@@ -110,15 +112,15 @@ def main():
         if enemies_killed <= 99:
           match enemy_type:
             case 1:
-              e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True)
+              e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1)
               enemies.append(e)
               return
             case 2:
-              e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False)
+              e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1)
               enemies.append(e)
               return
             case 3:
-              e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True)
+              e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1)
               enemies.append(e)
               return
 
@@ -145,7 +147,7 @@ def main():
       case 4:
         enemy_spawny = 568
         enemy_spawnx = random.randint(50, 984)
-    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 5, 50, 10, 3, 3, True)
+    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 3, 3, True, 5)
     enemies.append(e)
 
   #main loop
@@ -163,8 +165,13 @@ def main():
       if event.type == pygame.KEYDOWN and game_active == False:
         if event.key == pygame.K_SPACE:
           game_active = True
-          player.hp = 10
-          score = 0
+          i_frame = 0
+          is_hit = False
+          enemies_killed = 0
+          boss_spawned = False
+          shot_cd = 0
+          player = Entity("black", 100, 100, 20, 20, 5, 10 )
+          difficulty = 1
           for e in reversed(range(len(enemies))):
             del enemies[e]
         for b in reversed(range(len(bullets))):
@@ -174,31 +181,34 @@ def main():
       if event.type == pygame.MOUSEBUTTONDOWN:
         #box 1
         if ui_1.collidepoint(event.pos):
-          if player.fire_rate <= 2:
+          if player.fire_rate <= 2 and player.skill_points >= 1:
             player.fire_rate += 1
+            player.skill_points -= 1
           else:
-            player.fire_rate = 1
+            pass
         #box 2
         if ui_2.collidepoint(event.pos):
-          if player.shot_size < 2:
+          if player.shot_size < 2 and player.skill_points >= 1:
             player.shot_size += 1
           else:
-            player.shot_size = 1
+            pass
         #box 3
         if ui_3.collidepoint(event.pos):
-          if player.damage <= 2:
+          if player.damage <= 2 and player.skill_points >= 1:
             player.damage += 1
           else:
-            player.damage = 1
+            pass
         #box 4
         if ui_4.collidepoint(event.pos):
-          player.skills["spray"] = not player.skills["spray"]
+          if player.skill_points >= 3 and player.skills["spray"] == False:
+            player.skills["spray"] = True
+            player.skill_points -= 3
         
     if game_active:
         #game loop drawing
         screen.fill("#c0e8ec")
         player.draw(screen)
-        text_surface = font.render(f"Score: {player.hp}", False, (64,64,64)).convert()
+        text_surface = font.render(f"Level: {player.level}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
         text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
         ui_rectangle = pygame.Rect(0, 618, 1024, 150) 
         pygame.draw.rect(screen, "white", ui_rectangle)
@@ -259,12 +269,15 @@ def main():
           boss_spawned = True
         if len(enemies) == 0 and boss_spawned == True:
           boss_spawned = False
+          difficulty += 1
         for b in reversed(range(len(bullets))):
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
               enemies[e].hp -= bullets[b].damage
               del bullets[b]
               if enemies[e].hp <= 0:
+                player.exp += enemies[e].exp
+                print(player.exp)
                 del enemies[e]
                 enemies_killed += 1
               score += 10
@@ -317,10 +330,15 @@ def main():
             enemy_bullets.remove(b)
           elif b.y <= -50 or b.rect.midbottom[1] >= 618:
             enemy_bullets.remove(b)
+        while player.exp >= 10:
+          player.level += 1
+          player.exp -= 10
+          player.skill_points += 1
+          print("Level up! Got a skill point")
 
     else:
       screen.fill("#c0e8ec")
-      text_surface = font.render(f"Score: {player.hp}", False, (64,64,64)).convert()
+      text_surface = font.render(f"Level: {player.level}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
       text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
       screen.blit(text_surface, text_rectangle)
       game_over_surface = font.render("Game over!", False, "red")
@@ -335,7 +353,6 @@ def main():
         bullets.remove(b)
       for eb in enemy_bullets:
         enemy_bullets.remove(eb)
-
     pygame.display.update()
     clock.tick(60)
   
