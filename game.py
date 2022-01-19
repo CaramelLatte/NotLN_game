@@ -184,7 +184,6 @@ def main():
         #box 4
         if ui_4.collidepoint(event.pos):
           player.spray = not player.spray
-          print(player.spray)
         
         
 
@@ -237,7 +236,6 @@ def main():
         if pygame.mouse.get_pressed()[0] and shot_cd <= 0:
           shot_cd = 20
           x,y = pygame.mouse.get_pos()
-          print(pygame.mouse.get_pos())
           b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
           bullets.append(b)
           if player.spray == True:
