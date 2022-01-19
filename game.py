@@ -20,7 +20,9 @@ def main():
       self.fire_rate = 1
       self.shot_size = 1
       self.damage = 1
-      self.spray = False
+      self.skills = {
+        "spray" : False
+      }
     def collided(self, rect):
       return self.rect.colliderect(rect)
     def draw(self, surface):
@@ -121,10 +123,12 @@ def main():
               return
 
   def spawn_boss():
-    for e in enemies:
-      enemies.remove(e)
-    for eb in enemy_bullets:
-      enemy_bullets.remove(eb)
+    while len(enemies) > 0:
+      for e in enemies:
+        enemies.remove(e)
+    while len(enemy_bullets) > 0:
+      for eb in enemy_bullets:
+        enemy_bullets.remove(eb)
     enemy_spawnx = 0
     enemy_spawny = 0
     spawn_wall = random.randint(1, 4)
@@ -146,11 +150,16 @@ def main():
 
   #main loop
   while True:
+    pygame.event.set_grab(True)
     #event handling
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         pygame.quit()
         exit()
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+          pygame.quit()
+          exit()
       if event.type == pygame.KEYDOWN and game_active == False:
         if event.key == pygame.K_SPACE:
           game_active = True
@@ -171,7 +180,7 @@ def main():
             player.fire_rate = 1
         #box 2
         if ui_2.collidepoint(event.pos):
-          if player.shot_size <= 2:
+          if player.shot_size < 2:
             player.shot_size += 1
           else:
             player.shot_size = 1
@@ -183,10 +192,8 @@ def main():
             player.damage = 1
         #box 4
         if ui_4.collidepoint(event.pos):
-          player.spray = not player.spray
+          player.skills["spray"] = not player.skills["spray"]
         
-        
-
     if game_active:
         #game loop drawing
         screen.fill("#c0e8ec")
@@ -209,7 +216,6 @@ def main():
         pygame.draw.rect(screen, "Black", ui_4, 1)
         screen.blit(text_surface, text_rectangle)
         pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
-
 
         i_frame -= 1
         if i_frame <= 0:
@@ -238,13 +244,13 @@ def main():
           x,y = pygame.mouse.get_pos()
           b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
           bullets.append(b)
-          if player.spray == True:
+          if player.skills["spray"] == True:
             b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
             b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
             bullets.append(b1)
             bullets.append(b2)
         
-        #conditional enemy spawnsm spawn boss every 20 kills
+        #conditional enemy spawns, spawn boss every 20 kills
         if boss_spawned == False and enemies_killed <= 19:
           spawn_enemies()
         elif boss_spawned == False and enemies_killed >= 20:
