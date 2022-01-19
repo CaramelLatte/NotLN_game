@@ -55,6 +55,7 @@ def main():
       self.collide_damage = collide_damage
       self.can_fire = can_fire
       self.exp = exp
+      self.boss = False
       self.dx = 0
       self.dy = 0
     def move(self):
@@ -148,6 +149,7 @@ def main():
         enemy_spawny = 568
         enemy_spawnx = random.randint(50, 984)
     e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 3, 3, True, 5)
+    e.boss = True
     enemies.append(e)
 
   #main loop
@@ -317,11 +319,24 @@ def main():
         for e in enemies:
           e.move()
           e.draw(screen)
-          shoot = random.randint(1, 100)
-          if shoot <=2 and e.can_fire == True:
-            x,y = player.rect.centerx, player.rect.centery
-            b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
-            enemy_bullets.append(b)
+          if e.boss == False:
+            shoot = random.randint(1, 100)
+            if shoot <=2 and e.can_fire == True:
+              x,y = player.rect.centerx, player.rect.centery
+              b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+              enemy_bullets.append(b)
+          elif e.boss == True:
+            shoot = random.randint(1, 20)
+            if shoot == 1:
+              x,y = player.rect.centerx, player.rect.centery
+              b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+              b1 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx + 30, player.rect.centery + 30, e.shot_damage)
+              b2 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx - 30, player.rect.centery - 30, e.shot_damage)
+              enemy_bullets.append(b)
+              enemy_bullets.append(b1)
+              enemy_bullets.append(b2)
+
+          
 
         for b in enemy_bullets:
           b.draw(screen)
