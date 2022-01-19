@@ -1,3 +1,4 @@
+from pickle import TRUE
 import pygame
 import math
 import random
@@ -16,12 +17,13 @@ def main():
   game_active = True
   bullets = []
   enemies = []
+  enemy_bullets = []
   i_frame = 0
   is_hit = False
 
   def spawn_enemies():
     enemy_spawn = random.randint(0, 100)
-    if enemy_spawn > 1 and enemy_spawn < 5:
+    if enemy_spawn > 1 and enemy_spawn < 3:
       enemy_spawnx = 0
       enemy_spawny = 0
       spawn_wall = random.randint(1, 4)
@@ -42,15 +44,15 @@ def main():
       enemy_type = random.randint(1, 3)
       match enemy_type:
         case 1:
-          e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3)
+          e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True)
           enemies.append(e)
           return
         case 2:
-          e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1)
+          e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False)
           enemies.append(e)
           return
         case 3:
-          e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2)
+          e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True)
           enemies.append(e)
           return         
   
@@ -75,7 +77,7 @@ def main():
       
 
   class Bullet(Entity):
-    def __init__(self, color, x, y, width, height, speed, hp, targetx, targety):
+    def __init__(self, color, x, y, width, height, speed, hp, targetx, targety, damage):
         super().__init__(color, x, y, width, height, speed, hp)
         self.rect = pygame.Rect(x, y, width, height)
         angle = math.atan2(targety-y, targetx-x)
@@ -83,6 +85,7 @@ def main():
         self.dy = math.sin(angle)*speed
         self.x = x
         self.y = y
+        self.damage = damage
     def move(self):
         self.x = self.x + self.dx
         self.y = self.y + self.dy
@@ -91,9 +94,13 @@ def main():
 
 
   class Enemy(Entity):
-    def __init__(self, color, x, y, width, height, speed, hp):
+    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire):
       super().__init__(color, x, y, width, height, speed, hp)
       self.rect = pygame.Rect(x, y, width, height)
+      self.bullet_speed = bullet_speed
+      self.shot_damage = shot_damage
+      self.collide_damage = collide_damage
+      self.can_fire = can_fire
 
       self.dx = 0
       self.dy = 0
@@ -156,7 +163,7 @@ def main():
 
         screen.fill("#c0e8ec")
         player.draw(screen)
-        text_surface = font.render(f"Score: {score}", False, (64,64,64)).convert()
+        text_surface = font.render(f"Score: {player.hp}", False, (64,64,64)).convert()
         text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
         ui_rectangle = pygame.Rect(0, 618, 1024, 150) 
         pygame.draw.rect(screen, "white", ui_rectangle)
@@ -198,11 +205,12 @@ def main():
         if pygame.mouse.get_pressed()[0] and shot_cd <= 0:
           shot_cd = 20
           x,y = pygame.mouse.get_pos()
-          b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y)
+          print(pygame.mouse.get_pos())
+          b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
           bullets.append(b)
           if player.spray == True:
-            b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30)
-            b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30)
+            b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
+            b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
             bullets.append(b1)
             bullets.append(b2)
         
@@ -212,8 +220,8 @@ def main():
         for b in reversed(range(len(bullets))):
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
+              enemies[e].hp -= bullets[b].damage
               del bullets[b]
-              enemies[e].hp -= 1 * player.damage
               if enemies[e].hp <= 0:
                 del enemies[e]
               score += 10
@@ -222,16 +230,25 @@ def main():
         for e in reversed(range(len(enemies))):
           if player.collided(enemies[e].rect):
             if i_frame <= 0 and is_hit == False:
+              player.hp -= enemies[e].collide_damage
               del enemies[e]
-              player.hp -= 1
               is_hit = True
               i_frame = 15
-              #print(f"Player HP remaining: {player.hp}")
               if player.hp <= 0:
                 game_active = False
 
+        for b in enemy_bullets:
+          if player.collided(b) and is_hit == False:
+            player.hp -= b.damage
+            enemy_bullets.remove(b)
+            is_hit = True
+            i_frame = 15
+            if player.hp <= 0:
+              game_active = False
+
         for b in reversed(range(len(bullets))):
           bullets[b].move()
+          bullets[b].draw(screen)
           if bullets[b].x <= -50 or bullets[b].x >= 1074:
             del bullets[b]
           elif bullets[b].y <= -50 or bullets[b].rect.midbottom[1] >= 618:
@@ -239,15 +256,25 @@ def main():
 
         for e in enemies:
           e.move()
-
-        for b in bullets:
-          b.draw(screen)
-        for e in enemies:
           e.draw(screen)
+          shoot = random.randint(1, 100)
+          if shoot <=2 and e.can_fire == True:
+            x,y = player.rect.centerx, player.rect.centery
+            print(x, y)
+            b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+            enemy_bullets.append(b)
+
+        for b in enemy_bullets:
+          b.draw(screen)
+          b.move()
+          if b.x <= -50 or b.x >= 1074:
+            enemy_bullets.remove(b)
+          elif b.y <= -50 or b.rect.midbottom[1] >= 618:
+            enemy_bullets.remove(b)
 
     else:
       screen.fill("#c0e8ec")
-      text_surface = font.render(f"Score: {score}", False, (64,64,64)).convert()
+      text_surface = font.render(f"Score: {player.hp}", False, (64,64,64)).convert()
       text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
       screen.blit(text_surface, text_rectangle)
       game_over_surface = font.render("Game over!", False, "red")
@@ -256,6 +283,12 @@ def main():
       restart_prompt_rectangle = restart_prompt_surface.get_rect(center = (screen.get_width() / 2, screen.get_height() - 100))
       screen.blit(game_over_surface, game_over_rectangle)
       screen.blit(restart_prompt_surface, restart_prompt_rectangle)
+      for e in enemies:
+        enemies.remove(e)
+      for b in bullets:
+        bullets.remove(b)
+      for eb in enemy_bullets:
+        enemy_bullets.remove(eb)
 
     pygame.display.update()
     clock.tick(60)
