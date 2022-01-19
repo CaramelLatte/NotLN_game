@@ -3,9 +3,68 @@ import pygame
 import math
 import random
 from sys import exit
+
+
+
+
 def main():
   pygame.init()
 
+  class Entity:
+    def __init__(self, color, x, y, width, height, speed, hp):
+      self.rect = pygame.Rect(x, y, width, height)
+      self.color = color
+      self.speed = speed
+      self.hp = hp
+      self.x = x
+      self.y = y
+      self.fire_rate = 1
+      self.shot_size = 1
+      self.damage = 1
+      self.spray = False
+    def collided(self, rect):
+      return self.rect.colliderect(rect)
+    def draw(self, surface):
+      pygame.draw.rect(surface, self.color, self.rect)
+      
+
+  class Bullet(Entity):
+    def __init__(self, color, x, y, width, height, speed, hp, targetx, targety, damage):
+        super().__init__(color, x, y, width, height, speed, hp)
+        self.rect = pygame.Rect(x, y, width, height)
+        angle = math.atan2(targety-y, targetx-x)
+        self.dx = math.cos(angle)*speed
+        self.dy = math.sin(angle)*speed
+        self.x = x
+        self.y = y
+        self.damage = damage
+    def move(self):
+        self.x = self.x + self.dx
+        self.y = self.y + self.dy
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
+
+
+  class Enemy(Entity):
+    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire):
+      super().__init__(color, x, y, width, height, speed, hp)
+      self.rect = pygame.Rect(x, y, width, height)
+      self.bullet_speed = bullet_speed
+      self.shot_damage = shot_damage
+      self.collide_damage = collide_damage
+      self.can_fire = can_fire
+      self.dx = 0
+      self.dy = 0
+    def move(self):
+      angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x)
+      self.dx = math.cos(angle)*self.speed
+      self.dy = math.sin(angle)*self.speed
+      self.x = self.x + self.dx
+      self.y = self.y + self.dy
+      self.rect.x = int(self.x)
+      self.rect.y = int(self.y)
+
+  #global variables
   screen_width = 1024
   screen_height = 768
   screen = pygame.display.set_mode((screen_width, screen_height))
@@ -22,8 +81,10 @@ def main():
   is_hit = False
   enemies_killed = 0
   boss_spawned = False
-  
-  
+  shot_cd = 0
+  player = Entity("black", 100, 100, 20, 20, 5, 10 )
+
+  #Enemy spawning begins here
   def spawn_enemies():
       enemy_spawn = random.randint(0, 100)
       if enemy_spawn > 1 and enemy_spawn < 3:
@@ -59,6 +120,7 @@ def main():
               e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True)
               enemies.append(e)
               return
+
   def spawn_boss():
     for e in enemies:
       enemies.remove(e)
@@ -83,69 +145,9 @@ def main():
     e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 5, 50, 10, 3, 3, True)
     enemies.append(e)
 
-  class Entity:
-    def __init__(self, color, x, y, width, height, speed, hp):
-      self.rect = pygame.Rect(x, y, width, height)
-      self.color = color
-      self.speed = speed
-      self.hp = hp
-      self.x = x
-      self.y = y
-      self.fire_rate = 1
-      self.shot_size = 1
-      self.damage = 1
-      self.spray = False
-
-    def collided(self, rect):
-      return self.rect.colliderect(rect)
-    def draw(self, surface):
-      pygame.draw.rect(surface, self.color, self.rect)
-      
-
-  class Bullet(Entity):
-    def __init__(self, color, x, y, width, height, speed, hp, targetx, targety, damage):
-        super().__init__(color, x, y, width, height, speed, hp)
-        self.rect = pygame.Rect(x, y, width, height)
-        angle = math.atan2(targety-y, targetx-x)
-        self.dx = math.cos(angle)*speed
-        self.dy = math.sin(angle)*speed
-        self.x = x
-        self.y = y
-        self.damage = damage
-    def move(self):
-        self.x = self.x + self.dx
-        self.y = self.y + self.dy
-        self.rect.x = int(self.x)
-        self.rect.y = int(self.y)
-
-
-  class Enemy(Entity):
-    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire):
-      super().__init__(color, x, y, width, height, speed, hp)
-      self.rect = pygame.Rect(x, y, width, height)
-      self.bullet_speed = bullet_speed
-      self.shot_damage = shot_damage
-      self.collide_damage = collide_damage
-      self.can_fire = can_fire
-
-      self.dx = 0
-      self.dy = 0
-
-    def move(self):
-      angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x)
-      self.dx = math.cos(angle)*self.speed
-      self.dy = math.sin(angle)*self.speed
-      self.x = self.x + self.dx
-      self.y = self.y + self.dy
-      self.rect.x = int(self.x)
-      self.rect.y = int(self.y)
-
-
-
-
-  player = Entity("black", 100, 100, 20, 20, 5, 10 )
-  shot_cd = 0
+  #main loop
   while True:
+    #event handling
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         pygame.quit()
@@ -159,6 +161,8 @@ def main():
             del enemies[e]
         for b in reversed(range(len(bullets))):
             del bullets[b]
+
+      #Click detection for UI elements
       if event.type == pygame.MOUSEBUTTONDOWN:
         #box 1
         if ui_1.collidepoint(event.pos):
@@ -166,19 +170,19 @@ def main():
             player.fire_rate += 1
           else:
             player.fire_rate = 1
-
+        #box 2
         if ui_2.collidepoint(event.pos):
           if player.shot_size <= 2:
             player.shot_size += 1
           else:
             player.shot_size = 1
-
+        #box 3
         if ui_3.collidepoint(event.pos):
           if player.damage <= 2:
             player.damage += 1
           else:
             player.damage = 1
-        
+        #box 4
         if ui_4.collidepoint(event.pos):
           player.spray = not player.spray
           print(player.spray)
@@ -186,7 +190,7 @@ def main():
         
 
     if game_active:
-
+        #game loop drawing
         screen.fill("#c0e8ec")
         player.draw(screen)
         text_surface = font.render(f"Score: {player.hp}", False, (64,64,64)).convert()
@@ -205,7 +209,6 @@ def main():
         ui_4 = pygame.Rect(768, 618, 256, 150)
         pygame.draw.rect(screen, "Blue", ui_4)
         pygame.draw.rect(screen, "Black", ui_4, 1)
-
         screen.blit(text_surface, text_rectangle)
         pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
 
@@ -216,18 +219,22 @@ def main():
         if shot_cd > 0:
           shot_cd -= player.fire_rate
 
+        #movement handling, arrows and wasd
         keys = pygame.key.get_pressed()
         player.rect.x += (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * player.speed
+        player.rect.x += (keys[pygame.K_d] - keys[pygame.K_a]) * player.speed
         if player.rect.x <= 0:
           player.rect.x = 0
         if player.rect.x >= 1004:
           player.rect.x = 1004
         player.rect.y += (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * player.speed
+        player.rect.y += (keys[pygame.K_s] - keys[pygame.K_w]) * player.speed
         if player.rect.y <= 0:
           player.rect.y = 0
         if player.rect.y >= 598:
           player.rect.y = 598
 
+        #left click shooting
         if pygame.mouse.get_pressed()[0] and shot_cd <= 0:
           shot_cd = 20
           x,y = pygame.mouse.get_pos()
@@ -240,7 +247,7 @@ def main():
             bullets.append(b1)
             bullets.append(b2)
         
-
+        #conditional enemy spawnsm spawn boss every 20 kills
         if boss_spawned == False and enemies_killed <= 19:
           spawn_enemies()
         elif boss_spawned == False and enemies_killed >= 20:
@@ -260,6 +267,7 @@ def main():
               score += 10
               break
 
+        #collision detection for all entities, draw enemies and bullets
         for e in reversed(range(len(enemies))):
           if player.collided(enemies[e].rect):
             if i_frame <= 0 and is_hit == False:
@@ -296,7 +304,6 @@ def main():
           shoot = random.randint(1, 100)
           if shoot <=2 and e.can_fire == True:
             x,y = player.rect.centerx, player.rect.centery
-            print(x, y)
             b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
             enemy_bullets.append(b)
 
