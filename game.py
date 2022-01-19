@@ -279,7 +279,6 @@ def main():
               del bullets[b]
               if enemies[e].hp <= 0:
                 player.exp += enemies[e].exp
-                print(player.exp)
                 del enemies[e]
                 enemies_killed += 1
               score += 10
