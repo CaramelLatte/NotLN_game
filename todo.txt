@@ -4,3 +4,4 @@ transition from score system to exp system
 give enemies unique exp_granted values
 create more enemy types
 decide level based system
+melee system?

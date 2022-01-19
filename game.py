@@ -109,18 +109,18 @@ def main():
             enemy_spawny = 568
             enemy_spawnx = random.randint(50, 984)
 
-        enemy_type = random.randint(1, 3)
+        enemy_type = random.randint(1, 10)
         if enemies_killed <= 99:
           match enemy_type:
-            case 1:
+            case 1 | 2:
               e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1)
               enemies.append(e)
               return
-            case 2:
+            case 3 | 4 | 5 | 6:
               e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1)
               enemies.append(e)
               return
-            case 3:
+            case 7 | 8 | 9 | 10:
               e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1)
               enemies.append(e)
               return
