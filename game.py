@@ -20,42 +20,68 @@ def main():
   enemy_bullets = []
   i_frame = 0
   is_hit = False
-
-  def spawn_enemies():
-    enemy_spawn = random.randint(0, 100)
-    if enemy_spawn > 1 and enemy_spawn < 3:
-      enemy_spawnx = 0
-      enemy_spawny = 0
-      spawn_wall = random.randint(1, 4)
-      match spawn_wall:
-        case 1:
-          enemy_spawnx = 50
-          enemy_spawny = random.randint(50, 568)
-        case 2:
-          enemy_spawnx = 984
-          enemy_spawny = random.randint(50, 568)
-        case 3:
-          enemy_spawny = 50
-          enemy_spawnx = random.randint(50, 984)
-        case 4:
-          enemy_spawny = 568
-          enemy_spawnx = random.randint(50, 984)
-
-      enemy_type = random.randint(1, 3)
-      match enemy_type:
-        case 1:
-          e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True)
-          enemies.append(e)
-          return
-        case 2:
-          e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False)
-          enemies.append(e)
-          return
-        case 3:
-          e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True)
-          enemies.append(e)
-          return         
+  enemies_killed = 0
+  boss_spawned = False
   
+  
+  def spawn_enemies():
+      enemy_spawn = random.randint(0, 100)
+      if enemy_spawn > 1 and enemy_spawn < 3:
+        enemy_spawnx = 0
+        enemy_spawny = 0
+        spawn_wall = random.randint(1, 4)
+        match spawn_wall:
+          case 1:
+            enemy_spawnx = 50
+            enemy_spawny = random.randint(50, 568)
+          case 2:
+            enemy_spawnx = 984
+            enemy_spawny = random.randint(50, 568)
+          case 3:
+            enemy_spawny = 50
+            enemy_spawnx = random.randint(50, 984)
+          case 4:
+            enemy_spawny = 568
+            enemy_spawnx = random.randint(50, 984)
+
+        enemy_type = random.randint(1, 3)
+        if enemies_killed <= 99:
+          match enemy_type:
+            case 1:
+              e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True)
+              enemies.append(e)
+              return
+            case 2:
+              e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False)
+              enemies.append(e)
+              return
+            case 3:
+              e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True)
+              enemies.append(e)
+              return
+  def spawn_boss():
+    for e in enemies:
+      enemies.remove(e)
+    for eb in enemy_bullets:
+      enemy_bullets.remove(eb)
+    enemy_spawnx = 0
+    enemy_spawny = 0
+    spawn_wall = random.randint(1, 4)
+    match spawn_wall:
+      case 1:
+        enemy_spawnx = 50
+        enemy_spawny = random.randint(50, 568)
+      case 2:
+        enemy_spawnx = 984
+        enemy_spawny = random.randint(50, 568)
+      case 3:
+        enemy_spawny = 50
+        enemy_spawnx = random.randint(50, 984)
+      case 4:
+        enemy_spawny = 568
+        enemy_spawnx = random.randint(50, 984)
+    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 5, 50, 10, 3, 3, True)
+    enemies.append(e)
 
   class Entity:
     def __init__(self, color, x, y, width, height, speed, hp):
@@ -215,8 +241,14 @@ def main():
             bullets.append(b2)
         
 
-
-        spawn_enemies()
+        if boss_spawned == False and enemies_killed <= 19:
+          spawn_enemies()
+        elif boss_spawned == False and enemies_killed >= 20:
+          spawn_boss()
+          enemies_killed = 0
+          boss_spawned = True
+        if len(enemies) == 0 and boss_spawned == True:
+          boss_spawned = False
         for b in reversed(range(len(bullets))):
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
@@ -224,6 +256,7 @@ def main():
               del bullets[b]
               if enemies[e].hp <= 0:
                 del enemies[e]
+                enemies_killed += 1
               score += 10
               break
 
@@ -231,7 +264,10 @@ def main():
           if player.collided(enemies[e].rect):
             if i_frame <= 0 and is_hit == False:
               player.hp -= enemies[e].collide_damage
-              del enemies[e]
+              enemies[e].hp -= 1
+              if enemies[e].hp <= 0:
+                del enemies[e]
+                enemies_killed += 1
               is_hit = True
               i_frame = 15
               if player.hp <= 0:
