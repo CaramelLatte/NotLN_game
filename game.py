@@ -309,7 +309,7 @@ def main():
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
               enemies[e].hp -= bullets[b].damage
-              del bullets[b]g
+              del bullets[b]
               if enemies[e].hp <= 0:
                 player.exp += enemies[e].exp
                 del enemies[e]
