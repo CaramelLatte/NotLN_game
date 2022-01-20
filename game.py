@@ -14,6 +14,7 @@ def main():
       self.color = color
       self.speed = speed
       self.hp = hp
+      self.max_hp = hp
       self.x = x
       self.y = y
       self.fire_rate = 1
@@ -22,12 +23,18 @@ def main():
       self.exp = 0
       self.level = 1
       self.skill_points = 0
-      self.skills = {
+      self.gun = {
         "spray" : False,
         "beam" : False,
         "flame" : False,
         "pierce" : False
       }
+      self.skills = {
+        "revive" : False,
+        "freeze" : False,
+        "thing" : False,
+      }
+
     def collided(self, rect):
       return self.rect.colliderect(rect)
     def draw(self, surface):
@@ -213,8 +220,8 @@ def main():
             pass
         #box 4
         if ui_4.collidepoint(event.pos):
-          if player.skill_points >= 3 and player.skills["spray"] == False:
-            player.skills["spray"] = True
+          if player.skill_points >= 3 and player.gun["spray"] == False:
+            player.gun["spray"] = True
             player.skill_points -= 3
         
     if game_active:
@@ -282,7 +289,7 @@ def main():
           x,y = pygame.mouse.get_pos()
           b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
           bullets.append(b)
-          if player.skills["spray"] == True:
+          if player.gun["spray"] == True:
             b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
             b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
             bullets.append(b1)
@@ -302,7 +309,7 @@ def main():
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
               enemies[e].hp -= bullets[b].damage
-              del bullets[b]
+              del bullets[b]g
               if enemies[e].hp <= 0:
                 player.exp += enemies[e].exp
                 del enemies[e]
