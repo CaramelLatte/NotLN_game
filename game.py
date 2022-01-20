@@ -6,6 +6,7 @@ from sys import exit
 
 def main():
   pygame.init()
+  
 
   class Entity:
     def __init__(self, color, x, y, width, height, speed, hp):
@@ -92,6 +93,9 @@ def main():
   shot_cd = 0
   player = Entity("black", 100, 100, 20, 20, 5, 10 )
   difficulty = 1
+
+  pygame.mouse.set_pos([screen_width / 2, screen_height / 2])
+
 
   #Enemy spawning begins here
   def spawn_enemies():
