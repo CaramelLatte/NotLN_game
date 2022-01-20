@@ -24,7 +24,7 @@ def main():
       self.level = 1
       self.skill_points = 0
       self.gun = {
-        "spray" : False,
+        "spray" : True,
         "beam" : False,
         "flame" : False,
         "pierce" : False
@@ -32,7 +32,7 @@ def main():
       self.skills = {
         "revive" : False,
         "freeze" : False,
-        "thing" : False,
+        "reflect" : False,
       }
 
     def collided(self, rect):
@@ -292,16 +292,16 @@ def main():
           if player.gun["spray"] == True:
             b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
             b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
-            bullets.append(b1)
-            bullets.append(b2)
+            bullets.extend([b1, b2])
         
         #conditional enemy spawns, spawn boss every 20 kills
-        if boss_spawned == False and enemies_killed <= 19:
-          spawn_enemies()
-        elif boss_spawned == False and enemies_killed >= 20:
-          spawn_boss()
-          enemies_killed = 0
-          boss_spawned = True
+        if player.skills["freeze"] == False:
+          if boss_spawned == False and enemies_killed <= 19:
+            spawn_enemies()
+          elif boss_spawned == False and enemies_killed >= 20:
+            spawn_boss()
+            enemies_killed = 0
+            boss_spawned = True
         if len(enemies) == 0 and boss_spawned == True:
           boss_spawned = False
           difficulty += 1
@@ -349,24 +349,24 @@ def main():
             del bullets[b]
 
         for e in enemies:
-          e.move()
           e.draw(screen)
-          if e.boss == False:
-            shoot = random.randint(1, 100)
-            if shoot <=2 and e.can_fire == True:
-              x,y = player.rect.centerx, player.rect.centery
-              b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
-              enemy_bullets.append(b)
-          elif e.boss == True:
-            shoot = random.randint(1, 20)
-            if shoot == 1:
-              x,y = player.rect.centerx, player.rect.centery
-              b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
-              b1 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx + 30, player.rect.centery + 30, e.shot_damage)
-              b2 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx - 30, player.rect.centery - 30, e.shot_damage)
-              enemy_bullets.append(b)
-              enemy_bullets.append(b1)
-              enemy_bullets.append(b2)
+          if player.skills["freeze"] == False:
+            e.move()
+
+            if e.boss == False:
+              shoot = random.randint(1, 100)
+              if shoot <=2 and e.can_fire == True:
+                x,y = player.rect.centerx, player.rect.centery
+                b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+                enemy_bullets.append(b)
+            elif e.boss == True:
+              shoot = random.randint(1, 20)
+              if shoot == 1:
+                x,y = player.rect.centerx, player.rect.centery
+                b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+                b1 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx + 30, player.rect.centery + 30, e.shot_damage)
+                b2 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx - 30, player.rect.centery - 30, e.shot_damage)
+                enemy_bullets.extend([b, b1, b2])
 
           
 
