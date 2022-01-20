@@ -1,3 +1,4 @@
+from turtle import left
 import pygame
 import math
 import random
@@ -23,7 +24,8 @@ def main():
       self.skills = {
         "spray" : False,
         "beam" : False,
-        "flame" : False
+        "flame" : False,
+        "pierce" : False
       }
     def collided(self, rect):
       return self.rect.colliderect(rect)
@@ -76,6 +78,7 @@ def main():
   pygame.display.set_caption("Night of the Living Nerds")
   clock = pygame.time.Clock()
   font = pygame.font.Font(None, 50)
+  stat_font = pygame.font.Font(None, 20)
   score = 0
 
   game_active = True
@@ -111,18 +114,18 @@ def main():
             enemy_spawny = 568
             enemy_spawnx = random.randint(50, 984)
 
-        enemy_type = random.randint(1, 10)
+        enemy_type = random.randint(1, 3)
         if enemies_killed <= 99:
           match enemy_type:
-            case 1 | 2:
+            case 1:
               e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1)
               enemies.append(e)
               return
-            case 3 | 4 | 5 | 6:
+            case 2:
               e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1)
               enemies.append(e)
               return
-            case 7 | 8 | 9 | 10:
+            case 3:
               e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1)
               enemies.append(e)
               return
@@ -194,12 +197,14 @@ def main():
         if ui_2.collidepoint(event.pos):
           if player.shot_size < 2 and player.skill_points >= 1:
             player.shot_size += 1
+            player.skill_points -= 1
           else:
             pass
         #box 3
         if ui_3.collidepoint(event.pos):
           if player.damage <= 2 and player.skill_points >= 1:
             player.damage += 1
+            player.skill_points -= 1
           else:
             pass
         #box 4
@@ -212,23 +217,38 @@ def main():
         #game loop drawing
         screen.fill("#c0e8ec")
         player.draw(screen)
-        text_surface = font.render(f"Level: {player.level}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
-        text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
+        # text_surface = font.render(f"Level: {player.level}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
+        # text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
         ui_rectangle = pygame.Rect(0, 618, 1024, 150) 
         pygame.draw.rect(screen, "white", ui_rectangle)
+
         ui_1 = pygame.Rect(0, 618, 256, 150)
         pygame.draw.rect(screen, "Blue", ui_1)
         pygame.draw.rect(screen, "Black", ui_1, 1)
+
+
         ui_2 = pygame.Rect(256, 618, 256, 150)
+        hp_surface = stat_font.render(f"HP: {player.hp}", False, (0, 0, 0))
+        hp_rectangle = hp_surface.get_rect(midleft = (10, 640))
+        level_surface = stat_font.render(f"Lvl: {player.level}", False, (0, 0, 0))
+        level_rectangle = level_surface.get_rect(midleft = (10, 670))
+        sp_surface = stat_font.render(f"SP: {player.skill_points}", False, (0, 0, 0))
+        sp_rectangle = sp_surface.get_rect(midleft = (10, 700))
         pygame.draw.rect(screen, "Blue", ui_2)
         pygame.draw.rect(screen, "Black", ui_2, 1)
+        screen.blit(hp_surface, hp_rectangle)
+        screen.blit(level_surface, level_rectangle)
+        screen.blit(sp_surface, sp_rectangle)
+
         ui_3 = pygame.Rect(512, 618, 256, 150)
         pygame.draw.rect(screen, "Blue", ui_3)
         pygame.draw.rect(screen, "Black", ui_3, 1)
+
         ui_4 = pygame.Rect(768, 618, 256, 150)
         pygame.draw.rect(screen, "Blue", ui_4)
         pygame.draw.rect(screen, "Black", ui_4, 1)
-        screen.blit(text_surface, text_rectangle)
+
+        # screen.blit(text_surface, text_rectangle)
         pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
 
         i_frame -= 1
