@@ -21,7 +21,9 @@ def main():
       self.level = 1
       self.skill_points = 0
       self.skills = {
-        "spray" : False
+        "spray" : False,
+        "beam" : False,
+        "flame" : False
       }
     def collided(self, rect):
       return self.rect.colliderect(rect)
