@@ -10,4 +10,4 @@ better guns have a clip size and shot delay, shot delay between each shot, clip 
 
 more potions
 
-
+spawn random terrain, pathfinding/aggro range for enemies?

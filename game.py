@@ -1,4 +1,3 @@
-from turtle import left
 import pygame
 import math
 import random
