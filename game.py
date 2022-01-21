@@ -15,6 +15,9 @@ def main():
       self.speed = speed
       self.hp = hp
       self.max_hp = hp
+      self.under_potion = False
+      self.potion_effect = ""
+      self.potion_timer = 300
       self.x = x
       self.y = y
       self.fire_rate = 1
@@ -24,7 +27,7 @@ def main():
       self.level = 1
       self.skill_points = 0
       self.gun = {
-        "spray" : True,
+        "spray" : False,
         "beam" : False,
         "flame" : False,
         "pierce" : False
@@ -44,13 +47,15 @@ def main():
   class Bullet(Entity):
     def __init__(self, color, x, y, width, height, speed, hp, targetx, targety, damage):
         super().__init__(color, x, y, width, height, speed, hp)
-        self.rect = pygame.Rect(x, y, width, height)
+        #self.rect = pygame.Rect(x, y, width, height)
         angle = math.atan2(targety-y, targetx-x)
         self.dx = math.cos(angle)*speed
         self.dy = math.sin(angle)*speed
         self.x = x
         self.y = y
         self.damage = damage
+        self.pierce = 0
+
     def move(self):
         self.x = self.x + self.dx
         self.y = self.y + self.dy
@@ -70,6 +75,7 @@ def main():
       self.boss = False
       self.dx = 0
       self.dy = 0
+      self.hit = []
     def move(self):
       angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x)
       self.dx = math.cos(angle)*self.speed
@@ -78,6 +84,16 @@ def main():
       self.y = self.y + self.dy
       self.rect.x = int(self.x)
       self.rect.y = int(self.y)
+    def hit_by(self, bullet):
+      self.hit.append(bullet)
+      return self.hit
+
+
+  class Loot(Entity):
+    def __init__(self, color, x, y, width, height, speed, hp, type) -> None:
+      super().__init__(color, x, y, width, height, speed, hp)
+      self.type = type
+
 
   #global variables
   screen_width = 1024
@@ -87,12 +103,12 @@ def main():
   clock = pygame.time.Clock()
   font = pygame.font.Font(None, 50)
   stat_font = pygame.font.Font(None, 20)
-  score = 0
 
   game_active = True
   bullets = []
   enemies = []
   enemy_bullets = []
+  loot = []
   i_frame = 0
   is_hit = False
   enemies_killed = 0
@@ -228,8 +244,6 @@ def main():
         #game loop drawing
         screen.fill("#c0e8ec")
         player.draw(screen)
-        # text_surface = font.render(f"Level: {player.level}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
-        # text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
         ui_rectangle = pygame.Rect(0, 618, 1024, 150) 
         pygame.draw.rect(screen, "white", ui_rectangle)
 
@@ -239,7 +253,7 @@ def main():
 
 
         ui_2 = pygame.Rect(256, 618, 256, 150)
-        hp_surface = stat_font.render(f"HP: {player.hp}", False, (0, 0, 0))
+        hp_surface = stat_font.render(f"HP: {player.hp}/{player.max_hp}", False, (0, 0, 0))
         hp_rectangle = hp_surface.get_rect(midleft = (10, 640))
         level_surface = stat_font.render(f"Lvl: {player.level}", False, (0, 0, 0))
         level_rectangle = level_surface.get_rect(midleft = (10, 670))
@@ -267,6 +281,14 @@ def main():
           is_hit = False
         if shot_cd > 0:
           shot_cd -= player.fire_rate
+        if player.under_potion == True:
+          player.potion_timer -= 1
+          if player.potion_timer == 0:
+            if player.potion_effect == "speed":
+              player.speed -= 4
+            player.potion_effect = ""
+            player.under_potion = False
+            player.potion_timer = 300
 
         #movement handling, arrows and wasd
         keys = pygame.key.get_pressed()
@@ -288,10 +310,15 @@ def main():
           shot_cd = 20
           x,y = pygame.mouse.get_pos()
           b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
+          if player.gun["pierce"] == True:
+            b.pierce += 1
           bullets.append(b)
           if player.gun["spray"] == True:
             b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
             b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
+            if player.gun["pierce"] == True:
+              b1.pierce = 1
+              b2.pierce = 1
             bullets.extend([b1, b2])
         
         #conditional enemy spawns, spawn boss every 20 kills
@@ -302,19 +329,42 @@ def main():
             spawn_boss()
             enemies_killed = 0
             boss_spawned = True
+        #boss killed
         if len(enemies) == 0 and boss_spawned == True:
           boss_spawned = False
           difficulty += 1
+          if player.max_hp - player.hp <= 3:
+            player.hp = player.max_hp
+          else: 
+            player.hp += 3
+
+        #enemy hit check, loot drop
         for b in reversed(range(len(bullets))):
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
+              if bullets[b] in enemies[e].hit:
+                break
+              else:
+                enemies[e].hit.append(bullets[b])
               enemies[e].hp -= bullets[b].damage
-              del bullets[b]
+              if bullets[b].pierce < 1:
+                del bullets[b]
+              else:
+                bullets[b].pierce -= 1
               if enemies[e].hp <= 0:
                 player.exp += enemies[e].exp
-                del enemies[e]
+                loot_chance = random.randint(1, 10)
+                if loot_chance == 1:
+                  drop_type = random.randint(1, 2)
+                  match drop_type:
+                    case 1:
+                      drop = Loot("Pink", enemies[e].x, enemies[e].y, 15, 15, 0, 0, "hp")
+                    case 2:
+                      drop = Loot("Green", enemies[e].x, enemies[e].y, 15, 15, 0, 0, "speed")
+                  
+                  loot.append(drop)
                 enemies_killed += 1
-              score += 10
+                del enemies[e]
               break
 
         #collision detection for all entities, draw enemies and bullets
@@ -360,7 +410,7 @@ def main():
                 b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
                 enemy_bullets.append(b)
             elif e.boss == True:
-              shoot = random.randint(1, 20)
+              shoot = random.randint(1, 30)
               if shoot == 1:
                 x,y = player.rect.centerx, player.rect.centery
                 b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
@@ -379,13 +429,29 @@ def main():
             enemy_bullets.remove(b)
         while player.exp >= 10:
           player.level += 1
+          player.max_hp += 1
           player.exp -= 10
           player.skill_points += 1
-          print("Level up! Got a skill point")
+        
+
+        for drop in loot:
+          drop.draw(screen)
+          if player.collided(drop):
+            if drop.type == "hp":
+              if player.max_hp - player.hp < 2:
+                player.hp = player.max_hp
+              else:
+                player.hp += 2
+            if drop.type == "speed" and not player.under_potion:
+              player.under_potion = True
+              player.speed += 4
+              player.potion_effect = drop.type
+
+            loot.remove(drop)
 
     else:
       screen.fill("#c0e8ec")
-      text_surface = font.render(f"Level: {player.level}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
+      text_surface = font.render(f"Level: {player.level}/{player.max_hp}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
       text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
       screen.blit(text_surface, text_rectangle)
       game_over_surface = font.render("Game over!", False, "red")

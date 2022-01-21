@@ -5,4 +5,4 @@ move enemy spawn to unique function to reduce code bloat
 create more enemy types
 decide level based system
 melee system?
-
+fix enemies being double hit by pierce bullet
