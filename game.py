@@ -13,18 +13,23 @@ def main():
       self.rect = pygame.Rect(x, y, width, height)
       self.color = color
       self.speed = speed
+      self.x = x
+      self.y = y
       self.hp = hp
       self.max_hp = hp
+      self.i_frames = 0
+      self.is_hit = False
+      self.enemies_killed = 0
+      self.shot_cd = 0
       self.under_potion = False
       self.potion_effect = ""
       self.potion_timer = 300
-      self.x = x
-      self.y = y
       self.fire_rate = 1
       self.shot_size = 1
       self.damage = 1
       self.exp = 0
       self.level = 1
+      self.xp_to_level = 10
       self.skill_points = 0
       self.gun = {
         "spray" : False,
@@ -109,11 +114,7 @@ def main():
   enemies = []
   enemy_bullets = []
   loot = []
-  i_frame = 0
-  is_hit = False
-  enemies_killed = 0
   boss_spawned = False
-  shot_cd = 0
   player = Entity("black", 100, 100, 20, 20, 5, 10 )
   difficulty = 1
 
@@ -123,7 +124,7 @@ def main():
   #Enemy spawning begins here
   def spawn_enemies():
       enemy_spawn = random.randint(0, 100)
-      if enemy_spawn > 1 and enemy_spawn < (3 + difficulty):
+      if enemy_spawn > 1 and enemy_spawn < (2 + (difficulty * 2)):
         enemy_spawnx = 0
         enemy_spawny = 0
         spawn_wall = random.randint(1, 4)
@@ -141,21 +142,17 @@ def main():
             enemy_spawny = 568
             enemy_spawnx = random.randint(50, 984)
 
-        enemy_type = random.randint(1, 3)
-        if enemies_killed <= 99:
-          match enemy_type:
-            case 1:
-              e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1)
-              enemies.append(e)
-              return
-            case 2:
-              e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1)
-              enemies.append(e)
-              return
-            case 3:
-              e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1)
-              enemies.append(e)
-              return
+        enemy_type = random.randint(1, 100)
+        if player.enemies_killed <= 99:
+          if enemy_type <= 20:
+            e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1)
+          elif enemy_type > 20 and enemy_type <= 50:
+            e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1)
+          elif enemy_type >  50 or enemy_type <= 80:
+            e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1)
+          elif enemy_type > 80:
+            e = Enemy("purple", enemy_spawnx, enemy_spawny, 15, 15, 2, 5, 1, 1, 1, False, 1)
+          enemies.append(e)
 
   def spawn_boss():
     while len(enemies) > 0:
@@ -199,11 +196,11 @@ def main():
       if event.type == pygame.KEYDOWN and game_active == False:
         if event.key == pygame.K_SPACE:
           game_active = True
-          i_frame = 0
-          is_hit = False
-          enemies_killed = 0
+          player.i_frames = 0
+          player.is_hit = False
+          player.enemies_killed = 0
           boss_spawned = False
-          shot_cd = 0
+          player.shot_cd = 0
           player = Entity("black", 100, 100, 20, 20, 5, 10 )
           difficulty = 1
           for e in reversed(range(len(enemies))):
@@ -276,11 +273,11 @@ def main():
         # screen.blit(text_surface, text_rectangle)
         pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
 
-        i_frame -= 1
-        if i_frame <= 0:
-          is_hit = False
-        if shot_cd > 0:
-          shot_cd -= player.fire_rate
+        player.i_frames -= 1
+        if player.i_frames <= 0:
+          player.is_hit = False
+        if player.shot_cd > 0:
+          player.shot_cd -= player.fire_rate
         if player.under_potion == True:
           player.potion_timer -= 1
           if player.potion_timer == 0:
@@ -306,8 +303,8 @@ def main():
           player.rect.y = 598
 
         #left click shooting
-        if pygame.mouse.get_pressed()[0] and shot_cd <= 0:
-          shot_cd = 20
+        if pygame.mouse.get_pressed()[0] and player.shot_cd <= 0:
+          player.shot_cd = 20
           x,y = pygame.mouse.get_pos()
           b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
           if player.gun["pierce"] == True:
@@ -323,11 +320,11 @@ def main():
         
         #conditional enemy spawns, spawn boss every 20 kills
         if player.skills["freeze"] == False:
-          if boss_spawned == False and enemies_killed <= 19:
+          if boss_spawned == False and player.enemies_killed <= 19:
             spawn_enemies()
-          elif boss_spawned == False and enemies_killed >= 20:
+          elif boss_spawned == False and player.enemies_killed >= 20:
             spawn_boss()
-            enemies_killed = 0
+            player.enemies_killed = 0
             boss_spawned = True
         #boss killed
         if len(enemies) == 0 and boss_spawned == True:
@@ -358,35 +355,35 @@ def main():
                   drop_type = random.randint(1, 2)
                   match drop_type:
                     case 1:
-                      drop = Loot("Pink", enemies[e].x, enemies[e].y, 15, 15, 0, 0, "hp")
+                      drop = Loot("Pink", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "hp")
                     case 2:
-                      drop = Loot("Green", enemies[e].x, enemies[e].y, 15, 15, 0, 0, "speed")
+                      drop = Loot("Green", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "speed")
                   
                   loot.append(drop)
-                enemies_killed += 1
+                player.enemies_killed += 1
                 del enemies[e]
               break
 
         #collision detection for all entities, draw enemies and bullets
         for e in reversed(range(len(enemies))):
           if player.collided(enemies[e].rect):
-            if i_frame <= 0 and is_hit == False:
+            if player.i_frames <= 0 and player.is_hit == False:
               player.hp -= enemies[e].collide_damage
               enemies[e].hp -= 1
               if enemies[e].hp <= 0:
                 del enemies[e]
-                enemies_killed += 1
-              is_hit = True
-              i_frame = 15
+                player.enemies_killed += 1
+              player.is_hit = True
+              player.i_frames = 15
               if player.hp <= 0:
                 game_active = False
 
         for b in enemy_bullets:
-          if player.collided(b) and is_hit == False:
+          if player.collided(b) and player.is_hit == False:
             player.hp -= b.damage
             enemy_bullets.remove(b)
-            is_hit = True
-            i_frame = 15
+            player.is_hit = True
+            player.i_frames = 15
             if player.hp <= 0:
               game_active = False
 
@@ -427,12 +424,14 @@ def main():
             enemy_bullets.remove(b)
           elif b.y <= -50 or b.rect.midbottom[1] >= 618:
             enemy_bullets.remove(b)
-        while player.exp >= 10:
+
+        while player.exp >= player.xp_to_level:
           player.level += 1
           player.max_hp += 1
-          player.exp -= 10
+          player.exp -= player.xp_to_level
           player.skill_points += 1
-        
+          player.xp_to_level = int(player.xp_to_level * 1.3)
+
 
         for drop in loot:
           drop.draw(screen)
@@ -446,7 +445,6 @@ def main():
               player.under_potion = True
               player.speed += 4
               player.potion_effect = drop.type
-
             loot.remove(drop)
 
     else:

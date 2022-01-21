@@ -1,8 +1,13 @@
 move enemy spawn to unique function to reduce code bloat
-#give player entity attributes for RPG elements
-#transition from score system to exp system
-#give enemies unique exp_granted values
 create more enemy types
 decide level based system
 melee system?
-fix enemies being double hit by pierce bullet
+more item drops
+
+sp to unlock guns - shotgun, flamethrower, laser
+basic shot has infinite ammo
+better guns have a clip size and shot delay, shot delay between each shot, clip size is a pause before reloading
+
+more potions
+
+
