@@ -4,3 +4,5 @@ dist
 game.dist
 game.build
 game.dist.zip
+game.dist.7z
+test.py

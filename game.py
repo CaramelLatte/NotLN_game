@@ -5,6 +5,7 @@ from sys import exit
 
 def main():
   pygame.init()
+
   
 
   class Entity:
@@ -28,7 +29,7 @@ def main():
       self.damage = 1
       self.exp = 0
       self.level = 1
-      self.xp_to_level = 10
+      self.xp_to_level = 1
       self.skill_points = 0
       self.gun = {
         "spray" : False,
@@ -116,14 +117,34 @@ def main():
   boss_spawned = False
   player = Entity("black", 100, 100, 20, 20, 5, 10 )
   difficulty = 1
+  toast_list = []
+  toast_active = False
 
   pygame.mouse.set_pos([screen_width / 2, screen_height / 2])
+
+  class Toast:
+    def __init__(self, text, x, y) -> None:
+        self.text = text
+        self.duration = 720
+        self.x = x
+        self.y = y
+        self.move = 0
+        self.surface = stat_font.render(self.text, False, (236, 236, 236), (108, 132, 137))
+        self.rectangle = self.surface.get_rect(center=(self.x, self.y))
+        self.done = False
+
+    def draw(self):
+      screen.blit(self.surface, self.rectangle)
+      self.rectangle.y -= 2
+      if self.rectangle.y <= 0:
+        self.done = True
+
 
 
   #Enemy spawning begins here
   def spawn_enemies():
       enemy_spawn = random.randint(0, 100)
-      if enemy_spawn > 1 and enemy_spawn < (2 + (difficulty * 2)):
+      if enemy_spawn > 1 and enemy_spawn < (1 + (difficulty * 2)):
         enemy_spawnx = 0
         enemy_spawny = 0
         spawn_wall = random.randint(1, 4)
@@ -176,7 +197,7 @@ def main():
       case 4:
         enemy_spawny = 568
         enemy_spawnx = random.randint(50, 984)
-    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 3, 3, True, 5)
+    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 2, 3, True, 5)
     e.boss = True
     enemies.append(e)
 
@@ -271,6 +292,12 @@ def main():
 
         # screen.blit(text_surface, text_rectangle)
         pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
+        
+        if len(toast_list) >= 1:
+          toast_list[0].draw()
+          if toast_list[0].done == True:
+            toast_list.pop(0)
+
 
         player.i_frames -= 1
         if player.i_frames <= 0:
@@ -288,8 +315,12 @@ def main():
 
         #movement handling, arrows and wasd
         keys = pygame.key.get_pressed()
-        player.rect.x += (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * player.speed
-        player.rect.x += (keys[pygame.K_d] - keys[pygame.K_a]) * player.speed
+        if player.potion_effect == "speed":
+          player.rect.x += 2*(keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * player.speed
+          player.rect.x += 2*(keys[pygame.K_d] - keys[pygame.K_a]) * player.speed
+        else:
+          player.rect.x += (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * player.speed
+          player.rect.x += (keys[pygame.K_d] - keys[pygame.K_a]) * player.speed
         if player.rect.x <= 0:
           player.rect.x = 0
         if player.rect.x >= 1004:
@@ -401,12 +432,12 @@ def main():
 
             if e.boss == False:
               shoot = random.randint(1, 100)
-              if shoot <=2 and e.can_fire == True:
+              if shoot <=1 and e.can_fire == True:
                 x,y = player.rect.centerx, player.rect.centery
                 b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
                 enemy_bullets.append(b)
             elif e.boss == True:
-              shoot = random.randint(1, 30)
+              shoot = random.randint(1, 60)
               if shoot == 1:
                 x,y = player.rect.centerx, player.rect.centery
                 b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
@@ -430,7 +461,8 @@ def main():
           player.exp -= player.xp_to_level
           player.skill_points += 1
           player.xp_to_level = int(player.xp_to_level * 1.3)
-
+          toast = Toast(f"Leveled up! You are level {player.level} with {player.skill_points} SP.", player.rect.x, player.rect.y)
+          toast_list.append(toast)
 
         for drop in loot:
           drop.draw(screen)
@@ -468,3 +500,4 @@ def main():
   
 if __name__ == "__main__":
   main()
+    
