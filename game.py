@@ -365,7 +365,7 @@ def main():
           else: 
             player.hp += 3
 
-        #enemy hit check, loot drop
+        #enemy hit check, loot drop test
         for b in reversed(range(len(bullets))):
           for e in reversed(range(len(enemies))):
             if bullets[b].collided(enemies[e].rect):
