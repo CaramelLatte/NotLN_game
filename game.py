@@ -76,19 +76,34 @@ def main():
       self.shot_damage = shot_damage
       self.collide_damage = collide_damage
       self.can_fire = can_fire
+      self.behavior = "snipe"
       self.exp = exp
       self.boss = False
       self.dx = 0
       self.dy = 0
       self.hit = []
     def move(self):
-      angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x)
-      self.dx = math.cos(angle)*self.speed
-      self.dy = math.sin(angle)*self.speed
-      self.x = self.x + self.dx
-      self.y = self.y + self.dy
-      self.rect.x = int(self.x)
-      self.rect.y = int(self.y)
+        angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x)
+        self.dx = math.cos(angle)*self.speed
+        self.dy = math.sin(angle)*self.speed
+        dist = math.hypot(self.x-player.x, self.y-player.y)
+        if self.behavior == "rush":
+          self.x = self.x + self.dx
+          self.y = self.y + self.dy
+          self.rect.x = int(self.x)
+          self.rect.y = int(self.y)
+        elif self.behavior == "snipe":
+          if dist <= 400:
+            self.x = self.x - self.dx
+            self.y = self.y - self.dy
+            self.rect.x = int(self.x)
+            self.rect.y = int(self.y)
+          else:
+            self.x = self.x + self.dx
+            self.y = self.y + self.dy
+            self.rect.x = int(self.x)
+            self.rect.y = int(self.y)
+
     def hit_by(self, bullet):
       self.hit.append(bullet)
       return self.hit
@@ -99,6 +114,29 @@ def main():
       super().__init__(color, x, y, width, height, speed, hp)
       self.type = type
 
+  class Toast:
+      def __init__(self, text, x, y) -> None:
+          self.text = text
+          self.duration = 720
+          self.x = x
+          self.y = y
+          self.surface = stat_font.render(self.text, False, (236, 236, 236), (108, 132, 137))
+          self.rectangle = self.surface.get_rect(midright=(self.x, self.y))
+          self.done = False
+          self.hover = 240
+
+      def move(self):
+        if self.rectangle.midtop[1] < 0 and self.hover > 0:
+          self.rectangle.y += 1
+        else:
+          self.hover -= 1
+          if self.hover <= 0:
+            self.rectangle.y -= 1
+            if self.rectangle.midbottom[1] <= (0 - self.rectangle.height):
+              self.done = True
+        
+      def draw(self):
+        screen.blit(self.surface, self.rectangle)
 
   #global variables
   screen_width = 1024
@@ -118,28 +156,8 @@ def main():
   player = Entity("black", 100, 100, 20, 20, 5, 10 )
   difficulty = 1
   toast_list = []
-  toast_active = False
 
   pygame.mouse.set_pos([screen_width / 2, screen_height / 2])
-
-  class Toast:
-    def __init__(self, text, x, y) -> None:
-        self.text = text
-        self.duration = 720
-        self.x = x
-        self.y = y
-        self.move = 0
-        self.surface = stat_font.render(self.text, False, (236, 236, 236), (108, 132, 137))
-        self.rectangle = self.surface.get_rect(center=(self.x, self.y))
-        self.done = False
-
-    def draw(self):
-      screen.blit(self.surface, self.rectangle)
-      self.rectangle.y -= 2
-      if self.rectangle.y <= 0:
-        self.done = True
-
-
 
   #Enemy spawning begins here
   def spawn_enemies():
@@ -294,6 +312,7 @@ def main():
         pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
         
         if len(toast_list) >= 1:
+          toast_list[0].move()
           toast_list[0].draw()
           if toast_list[0].done == True:
             toast_list.pop(0)
@@ -461,7 +480,7 @@ def main():
           player.exp -= player.xp_to_level
           player.skill_points += 1
           player.xp_to_level = int(player.xp_to_level * 1.3)
-          toast = Toast(f"Leveled up! You are level {player.level} with {player.skill_points} SP.", player.rect.x, player.rect.y)
+          toast = Toast(f"Leveled up! You are level {player.level} with {player.skill_points} SP.", 1024, -50)
           toast_list.append(toast)
 
         for drop in loot:
