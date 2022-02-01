@@ -69,31 +69,44 @@ def main():
 
 
   class Enemy(Entity):
-    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire, exp):
+    def __init__(self, color, x, y, width, height, speed, hp, bullet_speed, shot_damage, collide_damage, can_fire, exp, behavior):
       super().__init__(color, x, y, width, height, speed, hp)
       self.rect = pygame.Rect(x, y, width, height)
       self.bullet_speed = bullet_speed
       self.shot_damage = shot_damage
       self.collide_damage = collide_damage
       self.can_fire = can_fire
-      self.behavior = "snipe"
+      self.behavior = behavior
       self.exp = exp
       self.boss = False
       self.dx = 0
       self.dy = 0
+      self.dist = 0
       self.hit = []
+
+    def force_onscreen(self):
+      if self.rect.x <= 0:
+        self.rect.x = 0
+      if self.rect.x >= 1004:
+        self.rect.x = 1004
+      if self.rect.y <= 0:
+        self.rect.y = 0
+      if self.rect.y >= 598:
+        self.rect.y = 598
+
+        
     def move(self):
         angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x)
         self.dx = math.cos(angle)*self.speed
         self.dy = math.sin(angle)*self.speed
-        dist = math.hypot(self.x-player.x, self.y-player.y)
+        self.dist = math.hypot(self.x-player.rect.x, self.y-player.rect.y)
         if self.behavior == "rush":
           self.x = self.x + self.dx
           self.y = self.y + self.dy
           self.rect.x = int(self.x)
           self.rect.y = int(self.y)
         elif self.behavior == "snipe":
-          if dist <= 400:
+          if int(self.dist) <= 400:
             self.x = self.x - self.dx
             self.y = self.y - self.dy
             self.rect.x = int(self.x)
@@ -103,6 +116,7 @@ def main():
             self.y = self.y + self.dy
             self.rect.x = int(self.x)
             self.rect.y = int(self.y)
+        self.force_onscreen()
 
     def hit_by(self, bullet):
       self.hit.append(bullet)
@@ -183,13 +197,13 @@ def main():
         enemy_type = random.randint(1, 100)
         if player.enemies_killed <= 99:
           if enemy_type <= 20:
-            e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1)
+            e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1, "snipe")
           elif enemy_type > 20 and enemy_type <= 50:
-            e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1)
-          elif enemy_type >  50 or enemy_type <= 80:
-            e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1)
+            e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1, "rush")
+          elif enemy_type >  50 and enemy_type <= 80:
+            e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1, "rush")
           elif enemy_type > 80:
-            e = Enemy("purple", enemy_spawnx, enemy_spawny, 15, 15, 2, 5, 1, 1, 1, False, 1)
+            e = Enemy("black", enemy_spawnx, enemy_spawny, 15, 15, 2, 5, 1, 1, 1, False, 1, "rush")
           enemies.append(e)
 
   def spawn_boss():
@@ -215,7 +229,7 @@ def main():
       case 4:
         enemy_spawny = 568
         enemy_spawnx = random.randint(50, 984)
-    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 2, 3, True, 5)
+    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 2, 3, True, 5, "rush")
     e.boss = True
     enemies.append(e)
 
