@@ -29,7 +29,7 @@ def main():
       self.damage = 1
       self.exp = 0
       self.level = 1
-      self.xp_to_level = 1
+      self.xp_to_level = 10
       self.skill_points = 0
       self.gun = {
         "spray" : False,
