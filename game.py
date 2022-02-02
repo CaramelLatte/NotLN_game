@@ -158,8 +158,8 @@ def main():
   screen = pygame.display.set_mode((screen_width, screen_height))
   pygame.display.set_caption("Night of the Living Nerds")
   clock = pygame.time.Clock()
-  font = pygame.font.Font(None, 50)
-  stat_font = pygame.font.Font(None, 20)
+  font = pygame.font.SysFont("Arial", 50)
+  stat_font = pygame.font.SysFont("Arial", 20)
 
   game_active = True
   bullets = []
@@ -171,7 +171,7 @@ def main():
   difficulty = 1
   toast_list = []
 
-  pygame.mouse.set_pos([screen_width / 2, screen_height / 2])
+  pygame.mouse.set_pos([int(screen_width / 2), int(screen_height / 2)])
 
   #Enemy spawning begins here
   def spawn_enemies():
@@ -180,19 +180,18 @@ def main():
         enemy_spawnx = 0
         enemy_spawny = 0
         spawn_wall = random.randint(1, 4)
-        match spawn_wall:
-          case 1:
-            enemy_spawnx = 50
-            enemy_spawny = random.randint(50, 568)
-          case 2:
-            enemy_spawnx = 984
-            enemy_spawny = random.randint(50, 568)
-          case 3:
-            enemy_spawny = 50
-            enemy_spawnx = random.randint(50, 984)
-          case 4:
-            enemy_spawny = 568
-            enemy_spawnx = random.randint(50, 984)
+        if spawn_wall == 1:
+          enemy_spawnx = 50
+          enemy_spawny = random.randint(50, 568)
+        elif spawn_wall == 2:
+          enemy_spawnx = 984
+          enemy_spawny = random.randint(50, 568)
+        elif spawn_wall == 3:
+          enemy_spawny = 50
+          enemy_spawnx = random.randint(50, 984)
+        else:
+          enemy_spawny = 568
+          enemy_spawnx = random.randint(50, 984)
 
         enemy_type = random.randint(1, 100)
         if player.enemies_killed <= 99:
@@ -216,19 +215,19 @@ def main():
     enemy_spawnx = 0
     enemy_spawny = 0
     spawn_wall = random.randint(1, 4)
-    match spawn_wall:
-      case 1:
-        enemy_spawnx = 50
-        enemy_spawny = random.randint(50, 568)
-      case 2:
-        enemy_spawnx = 984
-        enemy_spawny = random.randint(50, 568)
-      case 3:
-        enemy_spawny = 50
-        enemy_spawnx = random.randint(50, 984)
-      case 4:
-        enemy_spawny = 568
-        enemy_spawnx = random.randint(50, 984)
+    if spawn_wall == 1:
+      enemy_spawnx = 50
+      enemy_spawny = random.randint(50, 568)
+    elif spawn_wall == 2:
+      enemy_spawnx = 984
+      enemy_spawny = random.randint(50, 568)
+    elif spawn_wall == 3:
+      enemy_spawny = 50
+      enemy_spawnx = random.randint(50, 984)
+    else:
+      enemy_spawny = 568
+      enemy_spawnx = random.randint(50, 984)
+
     e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 2, 3, True, 5, "rush")
     e.boss = True
     enemies.append(e)
@@ -416,11 +415,10 @@ def main():
                 loot_chance = random.randint(1, 10)
                 if loot_chance == 1:
                   drop_type = random.randint(1, 2)
-                  match drop_type:
-                    case 1:
-                      drop = Loot("Pink", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "hp")
-                    case 2:
-                      drop = Loot("Green", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "speed")
+                  if drop_type == 1:
+                    drop = Loot("Pink", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "hp")
+                  elif drop_type == 2:
+                    drop = Loot("Green", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "speed")
                   
                   loot.append(drop)
                 player.enemies_killed += 1
