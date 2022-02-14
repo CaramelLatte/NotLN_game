@@ -167,7 +167,7 @@ def main():
   enemy_bullets = []
   loot = []
   boss_spawned = False
-  player = Entity("black", 100, 100, 20, 20, 5, 10 )
+  player = Entity((0,0,0), 100, 100, 20, 20, 5, 10 )
   difficulty = 1
   toast_list = []
 
@@ -196,13 +196,13 @@ def main():
         enemy_type = random.randint(1, 100)
         if player.enemies_killed <= 99:
           if enemy_type <= 20:
-            e = Enemy("white", enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1, "snipe")
+            e = Enemy((255, 255 ,255), enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1, "snipe")
           elif enemy_type > 20 and enemy_type <= 50:
-            e = Enemy("red", enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1, "rush")
+            e = Enemy((255,0,0), enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1, "rush")
           elif enemy_type >  50 and enemy_type <= 80:
-            e = Enemy("blue", enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1, "rush")
+            e = Enemy((0, 0,255), enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1, "rush")
           elif enemy_type > 80:
-            e = Enemy("black", enemy_spawnx, enemy_spawny, 15, 15, 2, 5, 1, 1, 1, False, 1, "rush")
+            e = Enemy((0,0,0), enemy_spawnx, enemy_spawny, 15, 15, 2, 5, 1, 1, 1, False, 1, "rush")
           enemies.append(e)
 
   def spawn_boss():
@@ -228,7 +228,7 @@ def main():
       enemy_spawny = 568
       enemy_spawnx = random.randint(50, 984)
 
-    e = Enemy("Green", enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 2, 3, True, 5, "rush")
+    e = Enemy((0,128,0), enemy_spawnx, enemy_spawny, 40, 40, 4, 50, 10, 2, 3, True, 5, "rush")
     e.boss = True
     enemies.append(e)
 
@@ -252,7 +252,7 @@ def main():
           player.enemies_killed = 0
           boss_spawned = False
           player.shot_cd = 0
-          player = Entity("black", 100, 100, 20, 20, 5, 10 )
+          player = Entity((0,0,0), 100, 100, 20, 20, 5, 10 )
           difficulty = 1
           for e in reversed(range(len(enemies))):
             del enemies[e]
@@ -290,14 +290,13 @@ def main():
         
     if game_active:
         #game loop drawing
-        screen.fill("#c0e8ec")
+        screen.fill((192, 232, 236))
         player.draw(screen)
         ui_rectangle = pygame.Rect(0, 618, 1024, 150) 
-        pygame.draw.rect(screen, "white", ui_rectangle)
-
+        pygame.draw.rect(screen, (255, 255 ,255), ui_rectangle)
         ui_1 = pygame.Rect(0, 618, 256, 150)
-        pygame.draw.rect(screen, "Blue", ui_1)
-        pygame.draw.rect(screen, "Black", ui_1, 1)
+        pygame.draw.rect(screen, (0, 0,255), ui_1)
+        pygame.draw.rect(screen, (0,0,0), ui_1, 1)
 
 
         ui_2 = pygame.Rect(256, 618, 256, 150)
@@ -307,22 +306,22 @@ def main():
         level_rectangle = level_surface.get_rect(midleft = (10, 670))
         sp_surface = stat_font.render(f"SP: {player.skill_points}", False, (0, 0, 0))
         sp_rectangle = sp_surface.get_rect(midleft = (10, 700))
-        pygame.draw.rect(screen, "Blue", ui_2)
-        pygame.draw.rect(screen, "Black", ui_2, 1)
+        pygame.draw.rect(screen, (0, 0,255), ui_2)
+        pygame.draw.rect(screen, (0,0,0), ui_2, 1)
         screen.blit(hp_surface, hp_rectangle)
         screen.blit(level_surface, level_rectangle)
         screen.blit(sp_surface, sp_rectangle)
 
         ui_3 = pygame.Rect(512, 618, 256, 150)
-        pygame.draw.rect(screen, "Blue", ui_3)
-        pygame.draw.rect(screen, "Black", ui_3, 1)
+        pygame.draw.rect(screen, (0, 0,255), ui_3)
+        pygame.draw.rect(screen, (0,0,0), ui_3, 1)
 
         ui_4 = pygame.Rect(768, 618, 256, 150)
-        pygame.draw.rect(screen, "Blue", ui_4)
-        pygame.draw.rect(screen, "Black", ui_4, 1)
+        pygame.draw.rect(screen, (0, 0,255), ui_4)
+        pygame.draw.rect(screen, (0,0,0), ui_4, 1)
 
         # screen.blit(text_surface, text_rectangle)
-        pygame.draw.line(screen, 'black', player.rect.center, pygame.mouse.get_pos())
+        pygame.draw.line(screen, (0,0,0), player.rect.center, pygame.mouse.get_pos())
         
         if len(toast_list) >= 1:
           toast_list[0].move()
@@ -368,13 +367,13 @@ def main():
         if pygame.mouse.get_pressed()[0] and player.shot_cd <= 0:
           player.shot_cd = 20
           x,y = pygame.mouse.get_pos()
-          b = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
+          b = Bullet((0,0,0), player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x, y, player.damage)
           if player.gun["pierce"] == True:
             b.pierce += 1
           bullets.append(b)
           if player.gun["spray"] == True:
-            b1 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
-            b2 = Bullet("black", player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
+            b1 = Bullet((0,0,0), player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x + 30, y + 30, player.damage)
+            b2 = Bullet((0,0,0), player.rect.centerx, player.rect.centery, (5 * player.shot_size), (5 * player.shot_size), 10, 1, x - 30, y - 30, player.damage)
             if player.gun["pierce"] == True:
               b1.pierce = 1
               b2.pierce = 1
@@ -416,9 +415,9 @@ def main():
                 if loot_chance == 1:
                   drop_type = random.randint(1, 2)
                   if drop_type == 1:
-                    drop = Loot("Pink", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "hp")
+                    drop = Loot((255,0,255), enemies[e].x, enemies[e].y, 10, 10, 0, 0, "hp")
                   elif drop_type == 2:
-                    drop = Loot("Green", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "speed")
+                    drop = Loot((0,128,0), enemies[e].x, enemies[e].y, 10, 10, 0, 0, "speed")
                   
                   loot.append(drop)
                 player.enemies_killed += 1
@@ -465,15 +464,15 @@ def main():
               shoot = random.randint(1, 100)
               if shoot <=1 and e.can_fire == True:
                 x,y = player.rect.centerx, player.rect.centery
-                b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+                b = Bullet((255,165,0), e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
                 enemy_bullets.append(b)
             elif e.boss == True:
               shoot = random.randint(1, 60)
               if shoot == 1:
                 x,y = player.rect.centerx, player.rect.centery
-                b = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
-                b1 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx + 30, player.rect.centery + 30, e.shot_damage)
-                b2 = Bullet("Orange", e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx - 30, player.rect.centery - 30, e.shot_damage)
+                b = Bullet((255,165,0), e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx, player.rect.centery, e.shot_damage)
+                b1 = Bullet((255,165,0), e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx + 30, player.rect.centery + 30, e.shot_damage)
+                b2 = Bullet((255,165,0), e.rect.centerx, e.rect.centery, 5, 5, e.bullet_speed, 1, player.rect.centerx - 30, player.rect.centery - 30, e.shot_damage)
                 enemy_bullets.extend([b, b1, b2])
 
           
@@ -514,9 +513,9 @@ def main():
       text_surface = font.render(f"Level: {player.level}/{player.max_hp}, Skill Points: {player.skill_points}", False, (64,64,64)).convert()
       text_rectangle = text_surface.get_rect(center = (screen.get_width() /2, 50))
       screen.blit(text_surface, text_rectangle)
-      game_over_surface = font.render("Game over!", False, "red")
+      game_over_surface = font.render("Game over!", False, (255,0,0))
       game_over_rectangle = game_over_surface.get_rect(center = (screen.get_width() /2 , screen.get_height() /2))
-      restart_prompt_surface = font.render("Press space to restart", False, "black")
+      restart_prompt_surface = font.render("Press space to restart", False, (0,0,0))
       restart_prompt_rectangle = restart_prompt_surface.get_rect(center = (screen.get_width() / 2, screen.get_height() - 100))
       screen.blit(game_over_surface, game_over_rectangle)
       screen.blit(restart_prompt_surface, restart_prompt_rectangle)
