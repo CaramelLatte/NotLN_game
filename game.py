@@ -77,6 +77,7 @@ def main():
       self.collide_damage = collide_damage
       self.can_fire = can_fire
       self.behavior = behavior
+      self.direction = ""
       self.exp = exp
       self.boss = False
       self.dx = 0
@@ -112,6 +113,30 @@ def main():
             self.rect.x = int(self.x)
             self.rect.y = int(self.y)
           else:
+            self.x = self.x + self.dx
+            self.y = self.y + self.dy
+            self.rect.x = int(self.x)
+            self.rect.y = int(self.y)
+        elif self.behavior == "flank":
+          if self.direction == "":
+            pick_dir = random.randint(0, 1)
+            if pick_dir == 0:
+              self.direction = "left"
+            else:
+              self.direction = "right"
+            print(self.direction)
+          if self.direction == "left":
+            flank_angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x) + 5
+            self.dx = math.cos(flank_angle)*self.speed
+            self.dy = math.sin(flank_angle)*self.speed
+            self.x = self.x + self.dx
+            self.y = self.y + self.dy
+            self.rect.x = int(self.x)
+            self.rect.y = int(self.y)
+          else:
+            flank_angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x) - 5
+            self.dx = math.cos(flank_angle)*self.speed
+            self.dy = math.sin(flank_angle)*self.speed
             self.x = self.x + self.dx
             self.y = self.y + self.dy
             self.rect.x = int(self.x)
@@ -167,7 +192,7 @@ def main():
   enemy_bullets = []
   loot = []
   boss_spawned = False
-  player = Entity((0,0,0), 100, 100, 20, 20, 5, 10 )
+  player = Entity((0,0,0), 100, 100, 20, 20, 5, 10000 )
   difficulty = 1
   toast_list = []
 
@@ -200,7 +225,7 @@ def main():
           elif enemy_type > 20 and enemy_type <= 50:
             e = Enemy((255,0,0), enemy_spawnx, enemy_spawny, 15, 15, 3, 1, 5, 1, 1, False, 1, "rush")
           elif enemy_type >  50 and enemy_type <= 80:
-            e = Enemy((0, 0,255), enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1, "rush")
+            e = Enemy((0, 0,255), enemy_spawnx, enemy_spawny, 15, 15, 2, 2, 5, 1, 1, True, 1, "flank")
           elif enemy_type > 80:
             e = Enemy((0,0,0), enemy_spawnx, enemy_spawny, 15, 15, 2, 5, 1, 1, 1, False, 1, "rush")
           enemies.append(e)
@@ -252,7 +277,7 @@ def main():
           player.enemies_killed = 0
           boss_spawned = False
           player.shot_cd = 0
-          player = Entity((0,0,0), 100, 100, 20, 20, 5, 10 )
+          player = Entity((0,0,0), 100, 100, 20, 20, 5, 10)
           difficulty = 1
           for e in reversed(range(len(enemies))):
             del enemies[e]
