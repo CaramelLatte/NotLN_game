@@ -6,8 +6,6 @@ from sys import exit
 def main():
   pygame.init()
 
-  
-
   class Entity:
     def __init__(self, color, x, y, width, height, speed, hp):
       self.rect = pygame.Rect(x, y, width, height)
@@ -58,8 +56,11 @@ def main():
         self.dy = math.sin(angle)*speed
         self.x = x
         self.y = y
+        self.startx = x
+        self.starty = y
         self.damage = damage
         self.pierce = 0
+        self.range = 400
 
     def move(self):
         self.x = self.x + self.dx
@@ -124,7 +125,6 @@ def main():
               self.direction = "left"
             else:
               self.direction = "right"
-            print(self.direction)
           if self.direction == "left":
             flank_angle = math.atan2(player.rect.y-self.y, player.rect.x-self.x) + 5
             self.dx = math.cos(flank_angle)*self.speed
@@ -219,7 +219,7 @@ def main():
           enemy_spawnx = random.randint(50, 984)
 
         enemy_type = random.randint(1, 100)
-        if player.enemies_killed <= 99:
+        if player.enemies_killed <= 20:
           if enemy_type <= 20:
             e = Enemy((255, 255 ,255), enemy_spawnx, enemy_spawny, 15, 15, 1, 3, 5, 1, 1, True, 1, "snipe")
           elif enemy_type > 20 and enemy_type <= 50:
@@ -475,7 +475,7 @@ def main():
         for b in reversed(range(len(bullets))):
           bullets[b].move()
           bullets[b].draw(screen)
-          if bullets[b].x <= -50 or bullets[b].x >= 1074:
+          if bullets[b].x <= -50 or bullets[b].x >= 1074 or math.hypot(bullets[b].x-bullets[b].startx, bullets[b].y-bullets[b].starty) >= bullets[b].range:
             del bullets[b]
           elif bullets[b].y <= -50 or bullets[b].rect.midbottom[1] >= 618:
             del bullets[b]
