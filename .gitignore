@@ -1,8 +1,6 @@
 __pycache__
-build
-dist
-game.dist
-game.build
-game.dist.zip
-game.dist.7z
-test.py
+.replit
+poetry.lock
+pyproject.toml
+replit.nix
+venv/

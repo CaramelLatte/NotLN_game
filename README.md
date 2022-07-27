@@ -2,7 +2,7 @@
 
 Work in progress.
 
-Simple topdown twin-stick style shooter. To play, download the latest C-compiled release or execute script with python.
+Simple topdown twin-stick style shooter. To play, visit https://replit.com/@VanillaAffogato/Night-of-the-Living-Nerds and click the 'run' download the repo and execute script with python.
 
 If using python, you'll need to install python 3.9 and pygame
 

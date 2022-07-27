@@ -6,6 +6,26 @@ from sys import exit
 
 def main():
     pygame.init()
+    #global variables
+    screen_width = 1024
+    screen_height = 768
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption("Night of the Living Nerds")
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont("Arial", 50)
+    stat_font = pygame.font.SysFont("Arial", 20)
+
+    game_active = True
+    bullets = []
+    enemies = []
+    enemies_left = 20
+    enemy_bullets = []
+    loot = []
+    boss_spawned = False
+    difficulty = 1
+    toast_list = []
+
+    pygame.mouse.set_pos([int(screen_width / 2), int(screen_height / 2)])
 
     class Entity:
         def __init__(self, color, x, y, width, height, speed, hp):
@@ -182,27 +202,7 @@ def main():
         def draw(self):
             screen.blit(self.surface, self.rectangle)
 
-    #global variables
-    screen_width = 1024
-    screen_height = 768
-    screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption("Night of the Living Nerds")
-    clock = pygame.time.Clock()
-    font = pygame.font.SysFont("Arial", 50)
-    stat_font = pygame.font.SysFont("Arial", 20)
-
-    game_active = True
-    bullets = []
-    enemies = []
-    enemies_left = 20
-    enemy_bullets = []
-    loot = []
-    boss_spawned = False
-    player = Entity((0, 0, 0), 100, 100, 20, 20, 5, 10000)
-    difficulty = 1
-    toast_list = []
-
-    pygame.mouse.set_pos([int(screen_width / 2), int(screen_height / 2)])
+    player = Entity((0, 0, 0), 100, 100, 20, 20, 5, 10)
 
     #Enemy spawning begins here
     def spawn_enemies():
