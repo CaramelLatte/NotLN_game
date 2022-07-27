@@ -3,7 +3,6 @@ import math
 import random
 from sys import exit
 
-
 def main():
     pygame.init()
     #global variables
