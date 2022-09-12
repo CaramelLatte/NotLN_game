@@ -1,3 +1,4 @@
+from turtle import distance
 import pygame
 import math
 import random
@@ -23,6 +24,7 @@ def main():
     boss_spawned = False
     difficulty = 1
     toast_list = []
+    turrets = []
 
     pygame.mouse.set_pos([int(screen_width / 2), int(screen_height / 2)])
 
@@ -168,6 +170,21 @@ def main():
         def hit_by(self, bullet):
             self.hit.append(bullet)
             return self.hit
+    
+    class Turret(Entity):
+        def __init__(self, color, x, y, width, height, speed, hp) -> None:
+            super().__init__(color, x, y, width, height, speed, hp)
+            self.shot_cd = 0
+            self.fire_rate = 1
+            self.shots = 100
+            self.shot_damage = 1
+
+
+        def find_distance(self, enemy):
+            dist = math.hypot(self.x - enemy.rect.x, self.y - enemy.rect.y)
+            return dist
+
+
 
     class Loot(Entity):
         def __init__(self, color, x, y, width, height, speed, hp,
@@ -367,11 +384,15 @@ def main():
                 if toast_list[0].done == True:
                     toast_list.pop(0)
 
+            #Cooldown iteration
             player.i_frames -= 1
             if player.i_frames <= 0:
                 player.is_hit = False
             if player.shot_cd > 0:
                 player.shot_cd -= player.fire_rate
+            for turret in turrets:
+                if turret.shot_cd > 0:
+                    turret.shot_cd -= turret.fire_rate
             if player.under_potion == True:
                 player.potion_timer -= 1
                 if player.potion_timer == 0:
@@ -470,7 +491,7 @@ def main():
                             player.exp += enemies[e].exp
                             loot_chance = random.randint(1, 10)
                             if loot_chance == 1:
-                                drop_type = random.randint(1, 2)
+                                drop_type = random.randint(1, 3)
                                 if drop_type == 1:
                                     drop = Loot((255, 0, 255), enemies[e].x,
                                                 enemies[e].y, 10, 10, 0, 0,
@@ -479,6 +500,8 @@ def main():
                                     drop = Loot((0, 128, 0), enemies[e].x,
                                                 enemies[e].y, 10, 10, 0, 0,
                                                 "speed")
+                                elif drop_type == 3:
+                                    drop = Loot("purple", enemies[e].x, enemies[e].y, 10, 10, 0, 0, "turret" )
 
                                 loot.append(drop)
                             enemies_left -= 1
@@ -583,7 +606,33 @@ def main():
                         player.under_potion = True
                         player.speed += 4
                         player.potion_effect = drop.type
+                    if drop.type == "turret":
+                        turret = Turret("purple", drop.rect.centerx, drop.rect.centery, 20, 20, 0, 999)
+                        turrets.append(turret)
                     loot.remove(drop)
+
+            for turret in turrets:
+                turret.draw(screen)
+                closest_enemy = []
+                closest_enemy_dist = 9999
+                for e in enemies:
+                    dist = turret.find_distance(e)
+                    if dist < closest_enemy_dist:
+                        closest_enemy_dist = dist
+                        if len(closest_enemy)  >= 1:
+                            closest_enemy.pop()
+                        
+                        closest_enemy.append(e)
+
+                if turret.shot_cd <= 0:
+                    turret.shot_cd = 20
+                    if len(closest_enemy) >= 1 and turret.find_distance(closest_enemy[-1]) <= 400:
+                        b = Bullet((255, 165, 0), turret.rect.centerx,
+                            turret.rect.centery, 5, 5, 5, 1,
+                            closest_enemy[-1].rect.centerx,
+                            closest_enemy[-1].rect.centery, turret.shot_damage)
+                        bullets.append(b)
+                        
 
         else:
             screen.fill("#c0e8ec")
